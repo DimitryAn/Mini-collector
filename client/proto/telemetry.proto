@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package telemetry;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "proto/telemetry";
+
+message Addresses {
+    google.protobuf.Timestamp timestamp = 1;
+    bytes ipaddrv4 = 2;
+    bytes ipaddrv6 = 3;
+}
+
+service Collector {
+    rpc SendAddresses(Addresses) returns (google.protobuf.Empty);
+}
