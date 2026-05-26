@@ -20,16 +20,19 @@ import (
 
 func main() {
 
-	conn, err := grpc.NewClient("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("grpc closed with error: %v", err)
-		}
-	}()
+	const grpcServerAddr = "localhost:8080"
+
+	conn, err := grpc.NewClient(grpcServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("can't open connection to grpc server: %v", err)
 	}
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("grpc conncention closed with error: %v", err)
+		}
+	}()
 
 	client := pb.NewCollectorClient(conn)
 
@@ -60,6 +63,7 @@ func sendValidIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorCli
 	for {
 		select {
 		case <-ctx.Done():
+			log.Print("close sendValidIP, context Done")
 			return
 		default:
 			addr4 := makeIpv4(clearipv4)
@@ -79,7 +83,7 @@ func sendValidIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorCli
 				if errors.Is(err, context.DeadlineExceeded) {
 					log.Print("Deadline!")
 				}
-				log.Print(err)
+				log.Printf("get error when send clear addr: %v", err)
 			} else {
 				log.Print("Succesfully send clear ip")
 			}
@@ -122,7 +126,7 @@ func sendBotIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClien
 				if errors.Is(err, context.DeadlineExceeded) {
 					log.Print("Deadline!")
 				}
-				log.Print(err)
+				log.Printf("get error when send bot addr: %v", err)
 			} else {
 				log.Print("Succesfully send bot ip")
 			}
@@ -137,7 +141,7 @@ func makeIpv4(ip string) [4]byte {
 	addr := prefix.Addr()
 	ipBytes := addr.As4()
 
-	// точно значем - маска = 24 (для bot ip)
+	// точно значем: маска = 24 (для bot ip)
 	ipBytes[3] = byte(rand.Intn(254) + 1)
 
 	return ipBytes
@@ -150,7 +154,7 @@ func makeIpv6(ip string) [16]byte {
 	addr := prefix.Addr()
 	ipBytes := addr.As16()
 
-	// точное знаем - маска = /64
+	// точное знаем: маска = /64
 	// свободны 8-15
 	ipBytes[8] = byte(rand.Intn(254) + 1)
 

@@ -24,5 +24,6 @@ func (cc *ClickRepo) WriteAddr(ctx context.Context, ip string, t time.Time) erro
 	if err := cc.conn.Conn.Exec(ctx, q, t, ip); err != nil {
 		return err
 	}
+
 	return nil
 }

@@ -23,6 +23,9 @@ type Collector struct {
 	botipv6 netip.Prefix
 }
 
+// априорная информация - ip-адреса ботов находятся в сетях:
+// ipv4 - 192.168.0.0/24
+// ipv6 - 2001:0db8:85a3:0000::/64
 func NewCollector(dbrepo repo) *Collector {
 	return &Collector{
 		dbrepo:  dbrepo,
@@ -31,9 +34,6 @@ func NewCollector(dbrepo repo) *Collector {
 	}
 }
 
-// априорная информация - ip-адреса ботов находятся в сетях:
-// ipv4 - 192.168.0.0/24
-// ipv6 - 2001:0db8:85a3:0000::/64
 func (c *Collector) SendAddresses(ctx context.Context, req *pb.Addresses) (*emptypb.Empty, error) {
 
 	if req.Timestamp == nil {
@@ -46,7 +46,7 @@ func (c *Collector) SendAddresses(ctx context.Context, req *pb.Addresses) (*empt
 	if ok && ipv4.Is4() && c.botipv4.Contains(ipv4) {
 		err := c.dbrepo.WriteAddr(ctx, ipv4.String(), t)
 		if err != nil {
-			log.Print("get err when write ipv4 to click ", err)
+			log.Printf("get err when write ipv4 to click: %v", err)
 		}
 	}
 
@@ -55,7 +55,7 @@ func (c *Collector) SendAddresses(ctx context.Context, req *pb.Addresses) (*empt
 	if ok && ipv6.Is6() && c.botipv6.Contains(ipv6) {
 		err := c.dbrepo.WriteAddr(ctx, ipv6.String(), t)
 		if err != nil {
-			log.Print("get err when write ipv6 to click ", err)
+			log.Printf("get err when write ipv6 to click: %v", err)
 		}
 	}
 

@@ -16,19 +16,25 @@ type ClickClient struct {
 func NewClient(ctx context.Context, password string) *ClickClient {
 	conn, err := connect(ctx, password)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("can't make connection to clickhouse: %v", err)
 	}
 
 	return &ClickClient{Conn: conn}
 }
 
 func connect(ctx context.Context, password string) (driver.Conn, error) {
+	const (
+		clickaddr = "localhost:9000"
+		database  = "collector"
+		username  = "admin"
+	)
+
 	var (
 		conn, err = clickhouse.Open(&clickhouse.Options{
-			Addr: []string{"localhost:9000"},
+			Addr: []string{clickaddr},
 			Auth: clickhouse.Auth{
-				Database: "collector",
-				Username: "admin",
+				Database: database,
+				Username: username,
 				Password: password,
 			},
 			ClientInfo: clickhouse.ClientInfo{
