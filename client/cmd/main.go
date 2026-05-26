@@ -21,6 +21,7 @@ import (
 func main() {
 
 	conn, err := grpc.NewClient("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	defer conn.Close()
 
 	if err != nil {
 		log.Fatal(err)
@@ -67,8 +68,8 @@ func sendValidIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorCli
 			}
 
 			childctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-			defer cancel()
 			_, err := client.SendAddresses(childctx, req)
+			cancel()
 
 			if err != nil {
 				if errors.Is(err, context.DeadlineExceeded) {
@@ -110,8 +111,8 @@ func sendBotIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClien
 			}
 
 			childctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-			defer cancel()
 			_, err := client.SendAddresses(childctx, req)
+			cancel()
 
 			if err != nil {
 				if errors.Is(err, context.DeadlineExceeded) {
@@ -128,7 +129,7 @@ func sendBotIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClien
 }
 
 func makeIpv4(ip string) [4]byte {
-	prefix, _ := netip.ParsePrefix(ip)
+	prefix := netip.MustParsePrefix(ip)
 	addr := prefix.Addr()
 	ipBytes := addr.As4()
 
@@ -140,7 +141,7 @@ func makeIpv4(ip string) [4]byte {
 
 func makeIpv6(ip string) [16]byte {
 
-	prefix, _ := netip.ParsePrefix(ip)
+	prefix := netip.MustParsePrefix(ip)
 
 	addr := prefix.Addr()
 	ipBytes := addr.As16()
