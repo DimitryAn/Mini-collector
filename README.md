@@ -1,0 +1,44 @@
+# Mini Сollector 
+![image](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![image](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+![image](https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=ClickHouse&logoColor=white)
+
+## Цели
+- Изучение gRPC и protobuf
+- Применение пакета `net/netip`
+- Приобретение навыков работы с пакетом `context`
+
+## Архитектура 
+### Клиент
+Клиент генерирует случайные IP-адреса, изменяя случайным образом определённые байты:
+- для IPv4 - третий байт 
+- для IPv6 - восьмой байт
+
+Сгенерированные IP-адреса вместе с временной меткой отправляются с помощью gRPC и proto-сообщения.
+
+Предполагается, что уже известны botnet-адреса сетей:
+1) ipv4 - 192.168.0.0/24
+2) ipv6 - 2001:0db8:85a3:0000::/64
+
+Адреса сетей обычных клиентов:
+1) ipv4 - 142.168.0.0/20
+2) ipv6 - 2001:0db8:12a3:0000::/64
+
+### Сервер 
+Сервер работает на порту :808, принимает proto-сообщения и проверяет, в какие сети выходят полученные IP-адреса. В случае обнаружения адреса из botnet-сети, сервер сохраняет IP-адрес и время обнаружения в базу данных ClickHouse.
+
+## Сборка и запуск проекта 
+Перед сборкой проекта необходимо установить Golang и Docker, склонировать проект и выполнить следующие команды:
+Перед запуском проекта необходимо создать `server/.env` и задать пароль для базы данных, поля должны именоваться в соответствии с `server/.env.example`
+1) Запуск севера
+```bash 
+cd server/
+docker compose up
+go run cmd/main.go
+```
+2) Запуск клиента
+ ```bash
+cd client/
+go run cmd/main.go
+```
+

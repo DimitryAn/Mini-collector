@@ -27,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't open connection to grpc server: %v", err)
 	}
+	log.Print("successfully start grpc client")
 
 	defer func() {
 		if err := conn.Close(); err != nil {
@@ -82,8 +83,9 @@ func sendValidIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorCli
 			if err != nil {
 				if errors.Is(err, context.DeadlineExceeded) {
 					log.Print("Deadline!")
+				} else {
+					log.Printf("get error when send clear addr: %v", err)
 				}
-				log.Printf("get error when send clear addr: %v", err)
 			} else {
 				log.Print("Succesfully send clear ip")
 			}
@@ -125,8 +127,9 @@ func sendBotIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClien
 			if err != nil {
 				if errors.Is(err, context.DeadlineExceeded) {
 					log.Print("Deadline!")
+				} else {
+					log.Printf("get error when send bot addr: %v", err)
 				}
-				log.Printf("get error when send bot addr: %v", err)
 			} else {
 				log.Print("Succesfully send bot ip")
 			}
