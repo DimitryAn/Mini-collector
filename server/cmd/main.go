@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"telemetry/internal/services/grpc/collector"
 	"telemetry/internal/storage/click"
 	pb "telemetry/proto/telemetry"
@@ -30,12 +32,15 @@ func main() {
 	password := os.Getenv("DB_PASSWORD")
 
 	if len(password) == 0 {
-		log.Fatal("empty password ", err)
+		log.Fatal("empty password ")
 	}
 
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer cancel()
+
 	cc := click.NewClient(ctx, password)
 	defer cc.Conn.Close()
+
 	cr := click.NewClickRepo(cc)
 	runMigrations(password)
 
@@ -48,10 +53,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Print("Start listen 8080")
-	if err := grpcServ.Serve(lis); err != nil {
-		log.Fatal(err)
-	}
+	log.Print("Start listen localhost:8080")
+
+	go func() {
+		if err := grpcServ.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	grpcServ.GracefulStop()
 }
 
 func runMigrations(password string) {

@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS collector.ip (
    bantime DateTime64(3),
-   ipv4 IPv4,
-   ipv6 IPv6
+   ip String
 ) ENGINE = MergeTree()
-ORDER BY (bantime);
+ORDER BY (bantime,ip);
