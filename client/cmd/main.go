@@ -21,7 +21,11 @@ import (
 func main() {
 
 	conn, err := grpc.NewClient("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("grpc closed with error: %v", err)
+		}
+	}()
 
 	if err != nil {
 		log.Fatal(err)
