@@ -15,7 +15,36 @@ services:
       nofile:
         soft: 262144
         hard: 262144
-        
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+  service:
+    build: .
+    container_name: "server"
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  client:
+    build: ../client/
+    container_name: "client"
+    depends_on:
+      service:
+        condition: service_started
+    networks:
+      - backend
+            
 volumes:
   clickhouse_data:
 
+networks:
+  backend:

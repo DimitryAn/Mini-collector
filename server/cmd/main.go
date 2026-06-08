@@ -35,10 +35,15 @@ func main() {
 		log.Fatal("empty password")
 	}
 
+	clickaddr := os.Getenv("DB_ADDRESS")
+	if len(clickaddr) == 0 {
+		clickaddr = "localhost"
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	cc := click.NewClient(ctx, password)
+	cc := click.NewClient(ctx, password, clickaddr)
 	defer func() {
 		if err := cc.Conn.Close(); err != nil {
 			log.Printf("close click connection with err: %v", err)
@@ -46,12 +51,12 @@ func main() {
 	}()
 
 	cr := click.NewClickRepo(cc)
-	runMigrations(password)
+	runMigrations(password, clickaddr)
 
 	grpcServ := grpc.NewServer()
 	pb.RegisterCollectorServer(grpcServ, collector.NewCollector(cr))
 
-	lis, err := net.Listen("tcp", "localhost:8080")
+	lis, err := net.Listen("tcp", "0.0.0.0:8080")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,9 +73,9 @@ func main() {
 	grpcServ.GracefulStop()
 }
 
-func runMigrations(password string) {
+func runMigrations(password, clickadddr string) {
 
-	dns := fmt.Sprintf("clickhouse://admin:%s@localhost:9000/collector?x-multi-statement=true", password)
+	dns := fmt.Sprintf("clickhouse://admin:%s@%s:9000/collector?x-multi-statement=true", password, clickadddr)
 
 	m, err := migrate.New("file://internal/migrations/click", dns)
 

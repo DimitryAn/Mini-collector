@@ -13,8 +13,8 @@ type ClickClient struct {
 	Conn driver.Conn
 }
 
-func NewClient(ctx context.Context, password string) *ClickClient {
-	conn, err := connect(ctx, password)
+func NewClient(ctx context.Context, password, addr string) *ClickClient {
+	conn, err := connect(ctx, password, addr)
 	if err != nil {
 		log.Fatalf("can't make connection to clickhouse: %v", err)
 	}
@@ -22,9 +22,9 @@ func NewClient(ctx context.Context, password string) *ClickClient {
 	return &ClickClient{Conn: conn}
 }
 
-func connect(ctx context.Context, password string) (driver.Conn, error) {
-	const (
-		clickaddr = "localhost:9000"
+func connect(ctx context.Context, password, addr string) (driver.Conn, error) {
+	var (
+		clickaddr = fmt.Sprintf("%s:9000", addr)
 		database  = "collector"
 		username  = "admin"
 	)

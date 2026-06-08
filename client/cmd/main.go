@@ -20,7 +20,7 @@ import (
 
 func main() {
 
-	const grpcServerAddr = "localhost:8080"
+	const grpcServerAddr = "service:8080"
 
 	conn, err := grpc.NewClient(grpcServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
