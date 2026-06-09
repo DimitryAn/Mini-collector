@@ -2,7 +2,7 @@ package click
 
 import (
 	"context"
-	"time"
+	"telemetry/internal/models/click"
 )
 
 type ClickRepo struct {
@@ -13,17 +13,21 @@ func NewClickRepo(conn *ClickClient) *ClickRepo {
 	return &ClickRepo{conn: conn}
 }
 
-func (cc *ClickRepo) WriteAddr(ctx context.Context, ip string, t time.Time) error {
+func (cc *ClickRepo) WriteAddr(ctx context.Context, messg []click.Messg) error {
 
-	q := `
-		INSERT INTO 
-			collector.ip (bantime,ip) 
-		VALUES (?, ?)
-	`
+	batch, err := cc.conn.Conn.PrepareBatch(ctx, "INSERT INTO collector.ip")
 
-	if err := cc.conn.Conn.Exec(ctx, q, t, ip); err != nil {
+	if err != nil {
 		return err
 	}
+	defer batch.Close()
 
-	return nil
+	for _, m := range messg {
+		err := batch.Append(m.T, m.IP)
+		if err != nil {
+			return err
+		}
+	}
+
+	return batch.Send()
 }

@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"telemetry/internal/services/grpc/collector"
 	"telemetry/internal/storage/click"
@@ -23,6 +24,13 @@ import (
 )
 
 func main() {
+
+	const (
+		batchSize     int = 25
+		flushInterval int = 10 //seconds
+	)
+
+	var wg sync.WaitGroup
 
 	err := godotenv.Load(".env")
 
@@ -54,7 +62,13 @@ func main() {
 	runMigrations(password, clickaddr)
 
 	grpcServ := grpc.NewServer()
-	pb.RegisterCollectorServer(grpcServ, collector.NewCollector(cr))
+	c := collector.NewCollector(cr, batchSize)
+
+	wg.Go(func() {
+		c.ClickWriter(ctx, batchSize, flushInterval)
+
+	})
+	pb.RegisterCollectorServer(grpcServ, c)
 
 	lis, err := net.Listen("tcp", "0.0.0.0:8080")
 	if err != nil {
@@ -71,6 +85,8 @@ func main() {
 
 	<-ctx.Done()
 	grpcServ.GracefulStop()
+	close(c.Ch)
+	wg.Wait()
 }
 
 func runMigrations(password, clickadddr string) {

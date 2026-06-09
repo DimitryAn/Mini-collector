@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
@@ -48,7 +49,10 @@ func connect(ctx context.Context, password, addr string) (driver.Conn, error) {
 			Debugf: func(format string, v ...interface{}) {
 				fmt.Printf(format, v)
 			},
-			TLS: nil,
+			MaxOpenConns:    5,
+			MaxIdleConns:    2,
+			ConnMaxLifetime: time.Minute * 30,
+			TLS:             nil,
 		})
 	)
 
