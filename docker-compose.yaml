@@ -24,7 +24,7 @@ services:
       retries: 3
       start_period: 15s
   service:
-    build: .
+    build: ./server
     container_name: "server"
     ports:
       - "8080:8080"
@@ -35,7 +35,7 @@ services:
         condition: service_healthy
   
   client:
-    build: ../client/
+    build: ./client/
     container_name: "client"
     depends_on:
       service:

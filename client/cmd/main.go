@@ -109,6 +109,7 @@ func sendBotIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClien
 	for {
 		select {
 		case <-ctx.Done():
+			log.Print("close sendBotIP, context Done")
 			return
 		default:
 			addr4 := makeIpv4(botipv4)
