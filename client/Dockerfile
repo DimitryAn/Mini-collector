@@ -1,4 +1,4 @@
-FROM golang:1.25
+FROM golang:1.25 AS builder
 
 WORKDIR /client
 
@@ -6,6 +6,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o /client/cmd/main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /client/main ./cmd/main.go
 
-CMD ["sh", "-c", "sleep 10 && exec /client/cmd/main"]
+FROM scratch
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY --from=builder /client/main /main
+
+ENTRYPOINT ["/main"]
