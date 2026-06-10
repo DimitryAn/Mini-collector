@@ -101,9 +101,9 @@ func main() {
 
 func runMigrations(password, clickadddr string) {
 
-	dns := fmt.Sprintf("clickhouse://admin:%s@%s:9000/collector?x-multi-statement=true", password, clickadddr)
+	dsn := fmt.Sprintf("clickhouse://admin:%s@%s:9000/collector?x-multi-statement=true", password, clickadddr)
 
-	m, err := migrate.New("file://internal/migrations/click", dns)
+	m, err := migrate.New("file://internal/migrations/click", dsn)
 
 	if err != nil {
 		log.Fatalf("Migration init failed: %v", err)
