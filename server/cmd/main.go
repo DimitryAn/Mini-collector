@@ -70,24 +70,33 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer lis.Close()
 
 	log.Print("Server start listen localhost:8080")
 
 	wg.Go(func() {
 		c.ClickWriter(batchSize, flushInterval)
-
 	})
 
+	sema := make(chan struct{})
 	go func() {
-		if err := grpcServ.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-			log.Fatalf("cant't start grpc server: %v", err)
+		if err := grpcServ.Serve(lis); err != nil {
+			log.Printf("grpc serve error: %v", err)
+			sema <- struct{}{}
 		}
 	}()
 
-	<-ctx.Done()
-	grpcServ.GracefulStop()
-	c.CloseChan()
-	wg.Wait()
+	select {
+	case <-ctx.Done():
+		log.Print("gracefully stop server")
+		grpcServ.GracefulStop()
+		c.CloseChan()
+		wg.Wait()
+	case <-sema:
+		log.Print("grpc server got error")
+		c.CloseChan()
+		wg.Wait()
+	}
 }
 
 func runMigrations(password, clickadddr string) {
