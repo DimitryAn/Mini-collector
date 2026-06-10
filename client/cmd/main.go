@@ -50,7 +50,6 @@ func main() {
 
 	<-ctx.Done()
 	wg.Wait()
-
 }
 
 func sendValidIP(wg *sync.WaitGroup, ctx context.Context, client pb.CollectorClient) {
