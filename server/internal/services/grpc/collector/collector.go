@@ -22,7 +22,7 @@ type Collector struct {
 	dbrepo  repo
 	botipv4 netip.Prefix
 	botipv6 netip.Prefix
-	Ch      chan click.Messg
+	ch      chan click.Messg
 }
 
 // априорная информация - ip-адреса ботов находятся в сетях:
@@ -34,7 +34,7 @@ func NewCollector(dbrepo repo, batchSize int) *Collector {
 		dbrepo:  dbrepo,
 		botipv4: netip.MustParsePrefix("192.168.0.0/24"),
 		botipv6: netip.MustParsePrefix("2001:0db8:85a3:0000::/64"),
-		Ch:      make(chan click.Messg, batchSize),
+		ch:      make(chan click.Messg, batchSize),
 	}
 }
 
@@ -48,19 +48,19 @@ func (c *Collector) SendAddresses(ctx context.Context, req *pb.Addresses) (*empt
 	ipv4, ok := netip.AddrFromSlice(req.Ipaddrv4)
 
 	if ok && ipv4.Is4() && c.botipv4.Contains(ipv4) {
-		c.Ch <- click.Messg{T: t, IP: ipv4.String()}
+		c.ch <- click.Messg{T: t, IP: ipv4.String()}
 	}
 
 	ipv6, ok := netip.AddrFromSlice(req.Ipaddrv6)
 
 	if ok && ipv6.Is6() && c.botipv6.Contains(ipv6) {
-		c.Ch <- click.Messg{T: t, IP: ipv6.String()}
+		c.ch <- click.Messg{T: t, IP: ipv6.String()}
 	}
 
 	return &emptypb.Empty{}, nil
 }
 
-func (c *Collector) ClickWriter(ctx context.Context, batchSize, flushInterval int) {
+func (c *Collector) ClickWriter(batchSize, flushInterval int) {
 	ticker := time.NewTicker(time.Duration(flushInterval) * time.Second)
 	defer ticker.Stop()
 	batch := make([]click.Messg, 0, batchSize)
@@ -69,9 +69,10 @@ func (c *Collector) ClickWriter(ctx context.Context, batchSize, flushInterval in
 		select {
 		case <-ticker.C:
 			c.flush(batch)
+			batch = nil
 			batch = make([]click.Messg, 0, batchSize)
 
-		case messg, ok := <-c.Ch:
+		case messg, ok := <-c.ch:
 			if !ok {
 				c.flush(batch)
 				batch = nil
@@ -80,13 +81,9 @@ func (c *Collector) ClickWriter(ctx context.Context, batchSize, flushInterval in
 			batch = append(batch, messg)
 			if len(batch) >= batchSize {
 				c.flush(batch)
+				batch = nil
 				batch = make([]click.Messg, 0, batchSize)
 			}
-
-		case <-ctx.Done():
-			c.flush(batch)
-			batch = nil
-			return
 		}
 	}
 }
@@ -103,4 +100,8 @@ func (c *Collector) flush(batch []click.Messg) {
 	if err := c.dbrepo.WriteAddr(childctx, batch); err != nil {
 		log.Print("can't make batch insertion", err)
 	}
+}
+
+func (c *Collector) CloseChan() {
+	close(c.ch)
 }

@@ -64,10 +64,6 @@ func main() {
 	grpcServ := grpc.NewServer()
 	c := collector.NewCollector(cr, batchSize)
 
-	wg.Go(func() {
-		c.ClickWriter(ctx, batchSize, flushInterval)
-
-	})
 	pb.RegisterCollectorServer(grpcServ, c)
 
 	lis, err := net.Listen("tcp", "0.0.0.0:8080")
@@ -77,6 +73,11 @@ func main() {
 
 	log.Print("Server start listen localhost:8080")
 
+	wg.Go(func() {
+		c.ClickWriter(batchSize, flushInterval)
+
+	})
+
 	go func() {
 		if err := grpcServ.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			log.Fatalf("cant't start grpc server: %v", err)
@@ -85,7 +86,7 @@ func main() {
 
 	<-ctx.Done()
 	grpcServ.GracefulStop()
-	close(c.Ch)
+	c.CloseChan()
 	wg.Wait()
 }
 
