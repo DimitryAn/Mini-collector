@@ -83,6 +83,50 @@ func (x *Addresses) GetIpaddrv6() []byte {
 	return nil
 }
 
+type RawPacket struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Packet        []byte                 `protobuf:"bytes,1,opt,name=packet,proto3" json:"packet,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RawPacket) Reset() {
+	*x = RawPacket{}
+	mi := &file_proto_telemetry_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RawPacket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RawPacket) ProtoMessage() {}
+
+func (x *RawPacket) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telemetry_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RawPacket.ProtoReflect.Descriptor instead.
+func (*RawPacket) Descriptor() ([]byte, []int) {
+	return file_proto_telemetry_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RawPacket) GetPacket() []byte {
+	if x != nil {
+		return x.Packet
+	}
+	return nil
+}
+
 var File_proto_telemetry_proto protoreflect.FileDescriptor
 
 const file_proto_telemetry_proto_rawDesc = "" +
@@ -91,9 +135,12 @@ const file_proto_telemetry_proto_rawDesc = "" +
 	"\tAddresses\x128\n" +
 	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1a\n" +
 	"\bipaddrv4\x18\x02 \x01(\fR\bipaddrv4\x12\x1a\n" +
-	"\bipaddrv6\x18\x03 \x01(\fR\bipaddrv62J\n" +
-	"\tCollector\x12=\n" +
-	"\rSendAddresses\x12\x14.telemetry.Addresses\x1a\x16.google.protobuf.EmptyB\x11Z\x0fproto/telemetryb\x06proto3"
+	"\bipaddrv6\x18\x03 \x01(\fR\bipaddrv6\"#\n" +
+	"\tRawPacket\x12\x16\n" +
+	"\x06packet\x18\x01 \x01(\fR\x06packet2\x88\x01\n" +
+	"\tCollector\x12>\n" +
+	"\x0eCheckAddresses\x12\x14.telemetry.Addresses\x1a\x16.google.protobuf.Empty\x12;\n" +
+	"\vCheckPacket\x12\x14.telemetry.RawPacket\x1a\x16.google.protobuf.EmptyB\x11Z\x0fproto/telemetryb\x06proto3"
 
 var (
 	file_proto_telemetry_proto_rawDescOnce sync.Once
@@ -107,18 +154,21 @@ func file_proto_telemetry_proto_rawDescGZIP() []byte {
 	return file_proto_telemetry_proto_rawDescData
 }
 
-var file_proto_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_proto_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_proto_telemetry_proto_goTypes = []any{
 	(*Addresses)(nil),             // 0: telemetry.Addresses
-	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 2: google.protobuf.Empty
+	(*RawPacket)(nil),             // 1: telemetry.RawPacket
+	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 3: google.protobuf.Empty
 }
 var file_proto_telemetry_proto_depIdxs = []int32{
-	1, // 0: telemetry.Addresses.timestamp:type_name -> google.protobuf.Timestamp
-	0, // 1: telemetry.Collector.SendAddresses:input_type -> telemetry.Addresses
-	2, // 2: telemetry.Collector.SendAddresses:output_type -> google.protobuf.Empty
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	2, // 0: telemetry.Addresses.timestamp:type_name -> google.protobuf.Timestamp
+	0, // 1: telemetry.Collector.CheckAddresses:input_type -> telemetry.Addresses
+	1, // 2: telemetry.Collector.CheckPacket:input_type -> telemetry.RawPacket
+	3, // 3: telemetry.Collector.CheckAddresses:output_type -> google.protobuf.Empty
+	3, // 4: telemetry.Collector.CheckPacket:output_type -> google.protobuf.Empty
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -135,7 +185,7 @@ func file_proto_telemetry_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_telemetry_proto_rawDesc), len(file_proto_telemetry_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

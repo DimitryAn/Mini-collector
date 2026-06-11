@@ -13,6 +13,11 @@ message Addresses {
     bytes ipaddrv6 = 3;
 }
 
+message RawPacket {
+    bytes packet = 1;
+}
+
 service Collector {
-    rpc SendAddresses(Addresses) returns (google.protobuf.Empty);
+    rpc CheckAddresses(Addresses) returns (google.protobuf.Empty);
+    rpc CheckPacket(RawPacket) returns (google.protobuf.Empty);
 }

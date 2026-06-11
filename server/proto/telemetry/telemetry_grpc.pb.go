@@ -20,14 +20,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Collector_SendAddresses_FullMethodName = "/telemetry.Collector/SendAddresses"
+	Collector_CheckAddresses_FullMethodName = "/telemetry.Collector/CheckAddresses"
+	Collector_CheckPacket_FullMethodName    = "/telemetry.Collector/CheckPacket"
 )
 
 // CollectorClient is the client API for Collector service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorClient interface {
-	SendAddresses(ctx context.Context, in *Addresses, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CheckAddresses(ctx context.Context, in *Addresses, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CheckPacket(ctx context.Context, in *RawPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type collectorClient struct {
@@ -38,10 +40,20 @@ func NewCollectorClient(cc grpc.ClientConnInterface) CollectorClient {
 	return &collectorClient{cc}
 }
 
-func (c *collectorClient) SendAddresses(ctx context.Context, in *Addresses, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *collectorClient) CheckAddresses(ctx context.Context, in *Addresses, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, Collector_SendAddresses_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Collector_CheckAddresses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *collectorClient) CheckPacket(ctx context.Context, in *RawPacket, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Collector_CheckPacket_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +64,8 @@ func (c *collectorClient) SendAddresses(ctx context.Context, in *Addresses, opts
 // All implementations must embed UnimplementedCollectorServer
 // for forward compatibility.
 type CollectorServer interface {
-	SendAddresses(context.Context, *Addresses) (*emptypb.Empty, error)
+	CheckAddresses(context.Context, *Addresses) (*emptypb.Empty, error)
+	CheckPacket(context.Context, *RawPacket) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCollectorServer()
 }
 
@@ -63,8 +76,11 @@ type CollectorServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCollectorServer struct{}
 
-func (UnimplementedCollectorServer) SendAddresses(context.Context, *Addresses) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method SendAddresses not implemented")
+func (UnimplementedCollectorServer) CheckAddresses(context.Context, *Addresses) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckAddresses not implemented")
+}
+func (UnimplementedCollectorServer) CheckPacket(context.Context, *RawPacket) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckPacket not implemented")
 }
 func (UnimplementedCollectorServer) mustEmbedUnimplementedCollectorServer() {}
 func (UnimplementedCollectorServer) testEmbeddedByValue()                   {}
@@ -87,20 +103,38 @@ func RegisterCollectorServer(s grpc.ServiceRegistrar, srv CollectorServer) {
 	s.RegisterService(&Collector_ServiceDesc, srv)
 }
 
-func _Collector_SendAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Collector_CheckAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Addresses)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CollectorServer).SendAddresses(ctx, in)
+		return srv.(CollectorServer).CheckAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Collector_SendAddresses_FullMethodName,
+		FullMethod: Collector_CheckAddresses_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CollectorServer).SendAddresses(ctx, req.(*Addresses))
+		return srv.(CollectorServer).CheckAddresses(ctx, req.(*Addresses))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Collector_CheckPacket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RawPacket)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServer).CheckPacket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Collector_CheckPacket_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServer).CheckPacket(ctx, req.(*RawPacket))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -113,8 +147,12 @@ var Collector_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*CollectorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendAddresses",
-			Handler:    _Collector_SendAddresses_Handler,
+			MethodName: "CheckAddresses",
+			Handler:    _Collector_CheckAddresses_Handler,
+		},
+		{
+			MethodName: "CheckPacket",
+			Handler:    _Collector_CheckPacket_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
