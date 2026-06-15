@@ -127,6 +127,66 @@ func (x *RawPacket) GetPacket() []byte {
 	return nil
 }
 
+type Alert struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	AttackDetected bool                   `protobuf:"varint,1,opt,name=attack_detected,json=attackDetected,proto3" json:"attack_detected,omitempty"`
+	CntSynPkg      uint64                 `protobuf:"varint,2,opt,name=cnt_syn_pkg,json=cntSynPkg,proto3" json:"cnt_syn_pkg,omitempty"`
+	Target         string                 `protobuf:"bytes,3,opt,name=target,proto3" json:"target,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Alert) Reset() {
+	*x = Alert{}
+	mi := &file_proto_telemetry_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Alert) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Alert) ProtoMessage() {}
+
+func (x *Alert) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_telemetry_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Alert.ProtoReflect.Descriptor instead.
+func (*Alert) Descriptor() ([]byte, []int) {
+	return file_proto_telemetry_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Alert) GetAttackDetected() bool {
+	if x != nil {
+		return x.AttackDetected
+	}
+	return false
+}
+
+func (x *Alert) GetCntSynPkg() uint64 {
+	if x != nil {
+		return x.CntSynPkg
+	}
+	return 0
+}
+
+func (x *Alert) GetTarget() string {
+	if x != nil {
+		return x.Target
+	}
+	return ""
+}
+
 var File_proto_telemetry_proto protoreflect.FileDescriptor
 
 const file_proto_telemetry_proto_rawDesc = "" +
@@ -137,10 +197,14 @@ const file_proto_telemetry_proto_rawDesc = "" +
 	"\bipaddrv4\x18\x02 \x01(\fR\bipaddrv4\x12\x1a\n" +
 	"\bipaddrv6\x18\x03 \x01(\fR\bipaddrv6\"#\n" +
 	"\tRawPacket\x12\x16\n" +
-	"\x06packet\x18\x01 \x01(\fR\x06packet2\x88\x01\n" +
+	"\x06packet\x18\x01 \x01(\fR\x06packet\"h\n" +
+	"\x05Alert\x12'\n" +
+	"\x0fattack_detected\x18\x01 \x01(\bR\x0eattackDetected\x12\x1e\n" +
+	"\vcnt_syn_pkg\x18\x02 \x01(\x04R\tcntSynPkg\x12\x16\n" +
+	"\x06target\x18\x03 \x01(\tR\x06target2\x84\x01\n" +
 	"\tCollector\x12>\n" +
-	"\x0eCheckAddresses\x12\x14.telemetry.Addresses\x1a\x16.google.protobuf.Empty\x12;\n" +
-	"\vCheckPacket\x12\x14.telemetry.RawPacket\x1a\x16.google.protobuf.EmptyB\x11Z\x0fproto/telemetryb\x06proto3"
+	"\x0eCheckAddresses\x12\x14.telemetry.Addresses\x1a\x16.google.protobuf.Empty\x127\n" +
+	"\vCheckPacket\x12\x14.telemetry.RawPacket\x1a\x10.telemetry.Alert(\x01B\x11Z\x0fproto/telemetryb\x06proto3"
 
 var (
 	file_proto_telemetry_proto_rawDescOnce sync.Once
@@ -154,19 +218,20 @@ func file_proto_telemetry_proto_rawDescGZIP() []byte {
 	return file_proto_telemetry_proto_rawDescData
 }
 
-var file_proto_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_telemetry_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_proto_telemetry_proto_goTypes = []any{
 	(*Addresses)(nil),             // 0: telemetry.Addresses
 	(*RawPacket)(nil),             // 1: telemetry.RawPacket
-	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 3: google.protobuf.Empty
+	(*Alert)(nil),                 // 2: telemetry.Alert
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 4: google.protobuf.Empty
 }
 var file_proto_telemetry_proto_depIdxs = []int32{
-	2, // 0: telemetry.Addresses.timestamp:type_name -> google.protobuf.Timestamp
+	3, // 0: telemetry.Addresses.timestamp:type_name -> google.protobuf.Timestamp
 	0, // 1: telemetry.Collector.CheckAddresses:input_type -> telemetry.Addresses
 	1, // 2: telemetry.Collector.CheckPacket:input_type -> telemetry.RawPacket
-	3, // 3: telemetry.Collector.CheckAddresses:output_type -> google.protobuf.Empty
-	3, // 4: telemetry.Collector.CheckPacket:output_type -> google.protobuf.Empty
+	4, // 3: telemetry.Collector.CheckAddresses:output_type -> google.protobuf.Empty
+	2, // 4: telemetry.Collector.CheckPacket:output_type -> telemetry.Alert
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -185,7 +250,7 @@ func file_proto_telemetry_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_telemetry_proto_rawDesc), len(file_proto_telemetry_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

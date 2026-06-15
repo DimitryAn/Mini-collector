@@ -25,7 +25,7 @@ func NewClient(ctx context.Context, password, addr string) *ClickClient {
 
 func connect(ctx context.Context, password, addr string) (driver.Conn, error) {
 	var (
-		clickaddr = fmt.Sprintf("%s:9000", addr)
+		clickaddr = fmt.Sprintf("%s", addr)
 		database  = "collector"
 		username  = "admin"
 	)

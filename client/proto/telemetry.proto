@@ -13,6 +13,17 @@ message Addresses {
     bytes ipaddrv6 = 3;
 }
 
+message RawPacket {
+    bytes packet = 1;
+}
+
+message Alert {
+    bool attack_detected = 1;
+    uint64 cnt_syn_pkg = 2;
+    string target = 3;
+}
+
 service Collector {
-    rpc SendAddresses(Addresses) returns (google.protobuf.Empty);
+    rpc CheckAddresses(Addresses) returns (google.protobuf.Empty);
+    rpc CheckPacket(stream RawPacket) returns (Alert);
 }

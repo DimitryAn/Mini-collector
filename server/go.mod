@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/google/gopacket v1.1.19
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.11

@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorClient interface {
 	CheckAddresses(ctx context.Context, in *Addresses, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	CheckPacket(ctx context.Context, in *RawPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CheckPacket(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RawPacket, Alert], error)
 }
 
 type collectorClient struct {
@@ -50,22 +50,25 @@ func (c *collectorClient) CheckAddresses(ctx context.Context, in *Addresses, opt
 	return out, nil
 }
 
-func (c *collectorClient) CheckPacket(ctx context.Context, in *RawPacket, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *collectorClient) CheckPacket(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RawPacket, Alert], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, Collector_CheckPacket_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Collector_ServiceDesc.Streams[0], Collector_CheckPacket_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[RawPacket, Alert]{ClientStream: stream}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Collector_CheckPacketClient = grpc.ClientStreamingClient[RawPacket, Alert]
 
 // CollectorServer is the server API for Collector service.
 // All implementations must embed UnimplementedCollectorServer
 // for forward compatibility.
 type CollectorServer interface {
 	CheckAddresses(context.Context, *Addresses) (*emptypb.Empty, error)
-	CheckPacket(context.Context, *RawPacket) (*emptypb.Empty, error)
+	CheckPacket(grpc.ClientStreamingServer[RawPacket, Alert]) error
 	mustEmbedUnimplementedCollectorServer()
 }
 
@@ -79,8 +82,8 @@ type UnimplementedCollectorServer struct{}
 func (UnimplementedCollectorServer) CheckAddresses(context.Context, *Addresses) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckAddresses not implemented")
 }
-func (UnimplementedCollectorServer) CheckPacket(context.Context, *RawPacket) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method CheckPacket not implemented")
+func (UnimplementedCollectorServer) CheckPacket(grpc.ClientStreamingServer[RawPacket, Alert]) error {
+	return status.Error(codes.Unimplemented, "method CheckPacket not implemented")
 }
 func (UnimplementedCollectorServer) mustEmbedUnimplementedCollectorServer() {}
 func (UnimplementedCollectorServer) testEmbeddedByValue()                   {}
@@ -121,23 +124,12 @@ func _Collector_CheckAddresses_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Collector_CheckPacket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RawPacket)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CollectorServer).CheckPacket(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Collector_CheckPacket_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CollectorServer).CheckPacket(ctx, req.(*RawPacket))
-	}
-	return interceptor(ctx, in, info, handler)
+func _Collector_CheckPacket_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CollectorServer).CheckPacket(&grpc.GenericServerStream[RawPacket, Alert]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Collector_CheckPacketServer = grpc.ClientStreamingServer[RawPacket, Alert]
 
 // Collector_ServiceDesc is the grpc.ServiceDesc for Collector service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -150,11 +142,13 @@ var Collector_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "CheckAddresses",
 			Handler:    _Collector_CheckAddresses_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "CheckPacket",
-			Handler:    _Collector_CheckPacket_Handler,
+			StreamName:    "CheckPacket",
+			Handler:       _Collector_CheckPacket_Handler,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/telemetry.proto",
 }
